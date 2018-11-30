@@ -1,4 +1,6 @@
 ---
+use_contiv_etcd: True
+
 # The version of Contiv binaries to use
 contiv_version: 1.2.0
 
@@ -146,7 +148,7 @@ contiv_etcd_url: "http://127.0.0.1:{{ contiv_etcd_port }}"
 contiv_etcd_init_image_repo: ferest/etcd-initer
 contiv_etcd_init_image_tag: latest
 contiv_etcd_image_repo: quay.io/coreos/etcd
-contiv_etcd_image_tag: v3.2.4
+contiv_etcd_image_tag: v3.2.22
 contiv_etcd_conf_dir: /etc/contiv-etcd
 contiv_etcd_data_dir: /var/lib/contiv-etcd
 contiv_etcd_peers: |-

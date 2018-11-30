@@ -7,9 +7,14 @@
     recurse: yes
     state: directory
 
+- include_tasks: certs.yml
+  when: not use_contiv_etcd
+
 - include_tasks: download_bins.yml
+
+- include_tasks: netplugin.yml
 
 - include_tasks: netmaster.yml
   when: contiv_master
 
-- include_tasks: netplugin.yml
+- include_tasks: netplugin_start.yml

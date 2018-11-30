@@ -33,12 +33,8 @@
     - "{{ contiv_etcd_data_dir }}"
     - "{{ contiv_etcd_conf_dir }}"
 
-- name: Contiv etcd | Create contiv-etcd openshift user
-  oc_serviceaccount:
-    state: present
-    name: contiv-etcd
-    namespace: kube-system
-  run_once: true
+
+- include_tasks: etcd_config.yml
 
 - name: Contiv etcd | Create temp directory for doing work
   command: mktemp -d /tmp/openshift-contiv-XXXXXX
@@ -46,13 +42,6 @@
   changed_when: False
   # For things that pass temp files between steps, we want to make sure they
   # run on the same node.
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true
-
-- name: Contiv etcd | Create etcd-scc.yml from template
-  template:
-    src: etcd-scc.yml.j2
-    dest: "{{ mktemp.stdout }}/etcd-scc.yml"
   delegate_to: "{{ groups.oo_masters_to_config.0 }}"
   run_once: true
 
@@ -70,23 +59,12 @@
   delegate_to: "{{ groups.oo_masters_to_config.0 }}"
   run_once: true
 
-- name: Contiv etcd | Add etcd scc
-  oc_obj:
-    state: present
-    namespace: "kube-system"
-    kind: SecurityContextConstraints
-    name: contiv-etcd
-    files:
-      - "{{ mktemp.stdout }}/etcd-scc.yml"
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true
-
 # Always "import" this file, k8s won't do anything if it matches exactly what
 # is already in the cluster.
 - name: Contiv etcd | Add etcd daemonset
   oc_obj:
     state: present
-    namespace: "kube-system"
+    namespace: "contiv-infra"
     kind: daemonset
     name: contiv-etcd
     files:
@@ -97,7 +75,7 @@
 - name: Contiv etcd | Add etcd-proxy daemonset
   oc_obj:
     state: present
-    namespace: "kube-system"
+    namespace: "contiv-infra"
     kind: daemonset
     name: contiv-etcd-proxy
     files:

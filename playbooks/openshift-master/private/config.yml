@@ -81,6 +81,9 @@
     when: openshift_use_nuage | default(false) | bool
   - role: calico
     when: openshift_use_calico | default(false) | bool
+  - role: contiv
+    contiv_master: true
+    when: openshift_use_contiv | default(false) | bool    
   tasks:
   - import_role:
       name: kuryr

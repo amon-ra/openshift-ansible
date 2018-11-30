@@ -6,6 +6,7 @@
   when: not contiv_has_firewalld and contiv_has_iptables
 
 - include_tasks: etcd.yml
+  when: use_contiv_etcd
 
 - name: Netmaster | Create netmaster symlinks
   file:

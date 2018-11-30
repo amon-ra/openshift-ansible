@@ -1,0 +1,61 @@
+---
+
+- name: Contiv etcd | Create temp directory for doing work
+  command: mktemp -d /tmp/openshift-contiv-XXXXXX
+  register: mktemp
+  changed_when: False
+  # For things that pass temp files between steps, we want to make sure they
+  # run on the same node.
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+
+- name: Contiv etcd ns  | Create etcd-ns.yml from template
+  template:
+    src: contiv-infra-ns.yaml.j2
+    dest: "{{ mktemp.stdout }}/contiv-infra-ns.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- name: Contiv etcd ns | Add etcd namespace
+  oc_obj:
+    state: present
+    kind: namespace
+    name: contiv-infra
+    files:
+      - "{{ mktemp.stdout }}/contiv-infra-ns.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true  
+  
+- name: Contiv etcd | Create contiv-etcd openshift user
+  oc_serviceaccount:
+    state: present
+    name: contiv-etcd
+    namespace: contiv-infra
+  run_once: true
+
+- name: Contiv etcd | Create etcd-scc.yml from template
+  template:
+    src: etcd-scc.yml.j2
+    dest: "{{ mktemp.stdout }}/etcd-scc.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- name: Contiv etcd | Add etcd scc
+  oc_obj:
+    state: present
+    namespace: "contiv-infra"
+    kind: SecurityContextConstraints
+    name: contiv-etcd
+    files:
+      - "{{ mktemp.stdout }}/etcd-scc.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- name: Contiv etcd | Delete temp directory
+  file:
+    name: "{{ mktemp.stdout }}"
+    state: absent
+  changed_when: False
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true

@@ -3,12 +3,12 @@
   oc_serviceaccount:
     state: present
     name: contiv-api-proxy
-    namespace: kube-system
+    namespace: contiv-infra
   run_once: true
 
 - name: API proxy | Set contiv-api-proxy openshift user permissions
   oc_adm_policy_user:
-    user: system:serviceaccount:kube-system:contiv-api-proxy
+    user: system:serviceaccount:contiv-infra:contiv-api-proxy
     resource_kind: scc
     resource_name: hostnetwork
     state: present
@@ -25,7 +25,7 @@
 
 - name: API proxy | Check for existing api proxy secret volume
   oc_obj:
-    namespace: kube-system
+    namespace: contiv-infra
     kind: secret
     state: list
     selector: "name=contiv-api-proxy-secret"
@@ -79,7 +79,7 @@
 - name: API proxy | Create secret certificate volume
   oc_obj:
     state: present
-    namespace: "kube-system"
+    namespace: "contiv-infra"
     kind: secret
     name: contiv-api-proxy-secret
     files:
@@ -103,7 +103,7 @@
 - name: API proxy | Add API proxy daemonset
   oc_obj:
     state: present
-    namespace: "kube-system"
+    namespace: "contiv-infra"
     kind: daemonset
     name: contiv-api-proxy
     files:

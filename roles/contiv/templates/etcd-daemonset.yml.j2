@@ -3,7 +3,7 @@ apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   name: contiv-etcd
-  namespace: kube-system
+  namespace: contiv-infra
 spec:
   updateStrategy:
     type: RollingUpdate
@@ -12,7 +12,7 @@ spec:
       name: contiv-etcd
   template:
     metadata:
-      namespace: kube-system
+      namespace: contiv-infra
       labels:
         name: contiv-etcd
       annotations:

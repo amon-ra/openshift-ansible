@@ -1,0 +1,89 @@
+---
+- name: Contiv Node | Set cert flag
+  set_fact:
+    contiv_certs_provided: "{{ contiv_etcd_ca_cert_file is defined or contiv_etcd_cert_file is defined or contiv_etcd_key_file is defined or contiv_etcd_endpoints is defined | bool }}"
+
+- name: Contiv Node | Error if invalid cert arguments
+  fail:
+    msg: "Must provide all or none for the following etcd params: contiv_etcd_ca_cert_file, contiv_etcd_cert_file, contiv_etcd_key_file, contiv_etcd_endpoints"
+  when:
+  - contiv_certs_provided
+  - not (contiv_etcd_ca_cert_file is defined and contiv_etcd_cert_file is defined and contiv_etcd_key_file is defined and contiv_etcd_endpoints is defined)
+
+- name: Contiv Node | Set etcd cert location facts
+  when: not contiv_certs_provided
+  set_fact:
+    contiv_etcd_ca_cert_file: "/etc/origin/master/master.etcd-ca.crt"
+    contiv_etcd_cert_file: "/etc/origin/master/master.etcd-client.crt"
+    contiv_etcd_key_file: "/etc/origin/master/master.etcd-client.key"
+    #{{ openshift_master_etcd_hosts | lib_utils_oo_etcd_host_urls(l_use_ssl, openshift_master_etcd_port) }}
+    # contiv_etcd_endpoints: "{{ hostvars[groups.oo_first_master.0].openshift_master_etcd_urls | join(',') }}"
+    contiv_etcd_endpoints: |-
+      {% for n in range( openshift_master_etcd_hosts | length) -%}
+        contiv{{ n }}=https://{{ openshift_master_etcd_hosts[n-1] }}:2380{% if not loop.last %},{% endif %}
+      {%- endfor %}
+      
+- name: Contiv Node | Error if no certs set.
+  fail:
+    msg: "Invalid etcd configuration for contiv."
+  when: item is not defined or item == ''
+  with_items:
+  - contiv_etcd_ca_cert_file
+  - contiv_etcd_cert_file
+  - contiv_etcd_key_file
+  - contiv_etcd_endpoints
+
+- name: Contiv Node | Assure the contiv certs are present
+  stat:
+    path: "{{ item }}"
+    get_checksum: false
+    get_attributes: false
+    get_mime: false
+  with_items:
+  - "{{ contiv_etcd_ca_cert_file }}"
+  - "{{ contiv_etcd_cert_file }}"
+  - "{{ contiv_etcd_key_file }}"
+
+- include_tasks: etcd_config.yml
+
+- name: Create secret
+  oc_secret:
+    name: contiv-etcd-secrets
+    state: present
+    namespace: contiv-infra
+    files:
+    - name: etcd-key
+      path: "{{ contiv_etcd_key_file }}"
+    - name: etcd-cert
+      path: "{{ contiv_etcd_cert_file }}"
+    - name: etcd-ca
+      path: "{{ contiv_etcd_ca_cert_file }}"
+  run_once: true
+
+- name: Contiv etcd | Create temp directory for doing work
+  command: mktemp -d /tmp/openshift-contiv-XXXXXX
+  register: mktemp
+  changed_when: False
+  # For things that pass temp files between steps, we want to make sure they
+  # run on the same node.
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+
+- name: Contiv etcd | Create etcd-proxy.yml from template
+  template:
+    src: openshift-etcd-proxy-daemonset.yml.j2
+    dest: "{{ mktemp.stdout }}/etcd-proxy-daemonset.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- name: Contiv etcd | Add etcd-proxy daemonset
+  oc_obj:
+    state: present
+    namespace: "contiv-infra"
+    kind: daemonset
+    name: contiv-etcd-proxy
+    files:
+      - "{{ mktemp.stdout }}/etcd-proxy-daemonset.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true  

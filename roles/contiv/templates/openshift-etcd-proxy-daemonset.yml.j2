@@ -4,6 +4,8 @@ kind: DaemonSet
 metadata:
   name: contiv-etcd-proxy
   namespace: contiv-infra
+  labels:
+    k8s-app: contiv-etcd
 spec:
   updateStrategy:
     type: RollingUpdate
@@ -18,22 +20,12 @@ spec:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ""
     spec:
-      serviceAccountName: contiv-etcd
-      hostNetwork: true
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: NotIn
-                values:
-{% for node in groups.oo_masters_to_config %}
-                  - "{{ node }}"
-{% endfor %}
       tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule   
+      serviceAccountName: contiv-etcd 
+      hostNetwork: true
+      hostPid: true
       containers:
         - name: contiv-etcd-proxy
           image: "{{ contiv_etcd_image_repo }}:{{ contiv_etcd_image_tag }}"
@@ -42,14 +34,20 @@ spec:
             - "--proxy=on"
             - "--listen-client-urls=http://127.0.0.1:{{ contiv_etcd_port }}"
             - "--advertise-client-urls=http://127.0.0.1:{{ contiv_etcd_port }}"
-            - "--initial-cluster={{ contiv_etcd_peers }}"
+            - "--initial-cluster={{ contiv_etcd_endpoints }}"
             - "--data-dir={{ contiv_etcd_data_dir }}"
+            - "--peer-trusted-ca-file=/contiv-secrets/etcd-ca"
+            - "--peer-cert-file=/contiv-secrets/etcd-cert"
+            - "--peer-key-file=/contiv-secrets/etcd-key"
           volumeMounts:
             - name: contiv-etcd-data-dir
-              mountPath: "{{ contiv_etcd_data_dir }}"
-          securityContext:
-            runAsUser: "{{ contiv_etcd_system_uid }}"
-            fsGroup: "{{ contiv_etcd_system_gid }}"
+              mountPath: "{{ contiv_etcd_data_dir }}"          
+            - mountPath: /contiv-secrets
+              name: etcd-certs 
       volumes:
         - name: contiv-etcd-data-dir
-          emptyDir: {}
+          emptyDir: {}      
+        - name: etcd-certs
+          secret:
+            secretName: contiv-etcd-secrets          
+

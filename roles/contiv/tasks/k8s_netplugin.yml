@@ -1,4 +1,7 @@
 ---
+- include_tasks: download_bins.yml
+- include_tasks: ovs.yml
+
 - include_tasks: netplugin_firewalld.yml
   when: contiv_has_firewalld
 
@@ -19,12 +22,12 @@
     line: '::1 '
     state: absent
 
-- name: Netplugin | Create Netplugin bin symlink
-  file:
-    src: "{{ contiv_current_release_directory }}/netplugin"
-    dest: "{{ contiv_bin_dir }}/netplugin"
-    state: link
-    force: yes
+# - name: Netplugin | Create Netplugin bin symlink
+#   file:
+#     src: "{{ contiv_current_release_directory }}/netplugin"
+#     dest: "{{ contiv_bin_dir }}/netplugin"
+#     state: link
+#     force: yes
 
 - name: Netplugin | Ensure contiv_cni_bin_dir exists
   file:
@@ -32,12 +35,12 @@
     recurse: yes
     state: directory
 
-- name: Netplugin | Create CNI bin symlink
-  file:
-    src: "{{ contiv_current_release_directory }}/contivk8s"
-    dest: "{{ contiv_cni_bin_dir }}/contivk8s"
-    state: link
-    force: yes
+# - name: Netplugin | Create CNI bin symlink
+#   file:
+#     src: "{{ contiv_current_release_directory }}/contivk8s"
+#     dest: "{{ contiv_cni_bin_dir }}/contivk8s"
+#     state: link
+#     force: yes
 
 - name: Netplugin | Copy CNI loopback bin
   copy:
@@ -55,34 +58,27 @@
     - "{{ contiv_kube_plugin_dir }}"
     - "/etc/cni/net.d"
 
-- name: Netplugin | Ensure contiv_config_dir exists
+- name: Netplugin | Ensure contiv directories exist
   file:
-    path: "{{ contiv_config_dir }}"
+    path: "{{ item }}"
     recurse: yes
     state: directory
+  with_items:
+    - "{{ contiv_releases_directory }}/bin"
+    - "{{ contiv_releases_directory }}/config"
+
+- name: Netplugin | Create contiv config file
+  template:
+    src: contiv.cfg.j2
+    dest: "{{ contiv_releases_directory }}/config/contiv.json"
 
 - name: Netplugin | Copy contiv_cni.conf file
   copy:
     src: contiv_cni.conf
     dest: "{{ item }}"
   with_items:
-    - "{{ contiv_kube_plugin_dir }}/contiv_cni.conf"
     - "/etc/cni/net.d"
 # notify: restart kubelet
-
-- name: Netplugin | Setup contiv.json config for the cni plugin
-  template:
-    src: contiv.cfg.j2
-    dest: "{{ contiv_config_dir }}/contiv.json"
-  when: not contiv_master
-  notify: restart netplugin
-
-- name: Netplugin | Copy environment file for netplugin
-  template:
-    src: netplugin.j2
-    dest: /etc/default/netplugin
-    mode: 0644
-  notify: restart netplugin
 
 - name: Netplugin | Make sure docker proxy setting exists
   lineinfile:
@@ -91,10 +87,4 @@
     line: 'https_proxy={{ contiv_https_proxy }}'
     state: present
   register: docker_updated
-
-- name: Netplugin | Copy systemd unit for netplugin
-  template:
-    src: netplugin.service
-    dest: /etc/systemd/system/netplugin.service
-  notify: reload systemd
 

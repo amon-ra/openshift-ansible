@@ -1,0 +1,7 @@
+- include_tasks: netmaster_firewalld.yml
+  when: contiv_has_firewalld
+
+- include_tasks: netmaster_iptables.yml
+  when: not contiv_has_firewalld and contiv_has_iptables
+
+  

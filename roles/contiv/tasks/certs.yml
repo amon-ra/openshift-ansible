@@ -44,7 +44,7 @@
   - "{{ contiv_etcd_cert_file }}"
   - "{{ contiv_etcd_key_file }}"
 
-- include_tasks: etcd_config.yml
+# - include_tasks: etcd_config.yml
 
 - name: Create secret
   oc_secret:
@@ -60,30 +60,18 @@
       path: "{{ contiv_etcd_ca_cert_file }}"
   run_once: true
 
-- name: Contiv etcd | Create temp directory for doing work
-  command: mktemp -d /tmp/openshift-contiv-XXXXXX
-  register: mktemp
-  changed_when: False
-  # For things that pass temp files between steps, we want to make sure they
-  # run on the same node.
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true
-
-
-- name: Contiv etcd | Create etcd-proxy.yml from template
-  template:
-    src: openshift-etcd-proxy-daemonset.yml.j2
-    dest: "{{ mktemp.stdout }}/etcd-proxy-daemonset.yml"
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true
-
-- name: Contiv etcd | Add etcd-proxy daemonset
-  oc_obj:
+- name: Create secret
+  oc_secret:
+    name: contiv-master-secrets
     state: present
-    namespace: "contiv-infra"
-    kind: daemonset
-    name: contiv-etcd-proxy
+    namespace: contiv-infra
     files:
-      - "{{ mktemp.stdout }}/etcd-proxy-daemonset.yml"
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true  
+    - name: master-key
+      path: "{{ openshift.common.config_base }}/master/master.server.key"
+    - name: master-cert
+      path: "{{ openshift.common.config_base }}/master/master.server.crt"
+    - name: master-ca
+      path: "{{ openshift.common.config_base }}/master/ca.crt"
+  run_once: true
+
+ 

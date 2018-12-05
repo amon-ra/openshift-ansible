@@ -1,18 +1,18 @@
 ---
-- name: API proxy | Create contiv-api-proxy openshift user
-  oc_serviceaccount:
-    state: present
-    name: contiv-api-proxy
-    namespace: contiv-infra
-  run_once: true
+# - name: API proxy | Create contiv-api-proxy openshift user
+#   oc_serviceaccount:
+#     state: present
+#     name: contiv-api-proxy
+#     namespace: contiv-infra
+#   run_once: true
 
-- name: API proxy | Set contiv-api-proxy openshift user permissions
-  oc_adm_policy_user:
-    user: system:serviceaccount:contiv-infra:contiv-api-proxy
-    resource_kind: scc
-    resource_name: hostnetwork
-    state: present
-  run_once: true
+# - name: API proxy | Set contiv-api-proxy openshift user permissions
+#   oc_adm_policy_user:
+#     user: system:serviceaccount:contiv-infra:contiv-api-proxy
+#     resource_kind: scc
+#     resource_name: hostnetwork
+#     state: present
+#   run_once: true
 
 - name: API proxy | Create temp directory for doing work
   command: mktemp -d /tmp/openshift-contiv-XXXXXX
@@ -89,27 +89,27 @@
   delegate_to: "{{ groups.oo_masters_to_config.0 }}"
   run_once: true
 
-- name: API proxy | Create api-proxy-daemonset.yml from template
-  template:
-    src: api-proxy-daemonset.yml.j2
-    dest: "{{ mktemp.stdout }}/api-proxy-daemonset.yml"
-  vars:
-    etcd_host: "etcd://{{ groups.oo_etcd_to_config.0 }}:{{ contiv_etcd_port }}"
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true
+# - name: API proxy | Create api-proxy-daemonset.yml from template
+#   template:
+#     src: api-proxy-daemonset.yml.j2
+#     dest: "{{ mktemp.stdout }}/api-proxy-daemonset.yml"
+#   vars:
+#     etcd_host: "etcd://{{ groups.oo_etcd_to_config.0 }}:{{ contiv_etcd_port }}"
+#   delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+#   run_once: true
 
 # Always "import" this file, k8s won't do anything if it matches exactly what
 # is already in the cluster.
-- name: API proxy | Add API proxy daemonset
-  oc_obj:
-    state: present
-    namespace: "contiv-infra"
-    kind: daemonset
-    name: contiv-api-proxy
-    files:
-      - "{{ mktemp.stdout }}/api-proxy-daemonset.yml"
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true
+# - name: API proxy | Add API proxy daemonset
+#   oc_obj:
+#     state: present
+#     namespace: "contiv-infra"
+#     kind: daemonset
+#     name: contiv-api-proxy
+#     files:
+#       - "{{ mktemp.stdout }}/api-proxy-daemonset.yml"
+#   delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+#   run_once: true
 
 - name: API proxy | Delete temp directory
   file:

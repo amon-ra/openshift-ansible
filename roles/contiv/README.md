@@ -37,3 +37,76 @@ Install Contiv components (netmaster, netplugin, contiv_etcd) on Master and Mini
 * Static routes added on external switch as shown to allow routing between host and container networks
 * External switch also used for public internet access 
 
+## Todo
+
+- split Roles,DaemonSet and RS in separate files.
+- Use a template for cni_config.
+- Redo cleanup tasks.
+- Cleanup old files.
+- contanerize ovs, based in this config:
+```
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    k8s-app: contiv-ovs
+  name: contiv-ovs
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: contiv-ovs
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+      labels:
+        k8s-app: contiv-ovs
+    spec:
+      containers:
+      - command:
+        - /scripts/start-ovsdb-server.sh
+        image: contiv/ovs:1.2.1
+        name: contiv-ovsdb-server
+        securityContext:
+          privileged: false
+        volumeMounts:
+        - mountPath: /etc/openvswitch
+          name: etc-openvswitch
+          readOnly: false
+        - mountPath: /var/run
+          name: var-run
+          readOnly: false
+      - command:
+        - /scripts/start-ovs-vswitchd.sh
+        image: contiv/ovs:1.2.1
+        name: contiv-ovs-vswitchd
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /etc/openvswitch
+          name: etc-openvswitch
+          readOnly: false
+        - mountPath: /lib/modules
+          name: lib-modules
+          readOnly: true
+        - mountPath: /var/run
+          name: var-run
+          readOnly: false
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      volumes:
+      - hostPath:
+          path: /etc/openvswitch
+        name: etc-openvswitch
+      - hostPath:
+          path: /lib/modules
+        name: lib-modules
+      - hostPath:
+          path: /var/run
+        name: var-run
+
+```

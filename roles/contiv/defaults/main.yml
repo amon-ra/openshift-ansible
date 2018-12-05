@@ -2,10 +2,11 @@
 use_contiv_etcd: True
 
 # The version of Contiv binaries to use
-contiv_version: 1.2.0
+contiv_version: "1.2.1"
 
 # The version of cni binaries
-contiv_cni_version: v0.4.0
+contiv_cni_version: "0.6.0"
+contiv_cni_spec_version: "0.3.1"
 
 # If the node we are deploying to is to be a contiv master.
 contiv_master: false
@@ -58,8 +59,10 @@ contiv_cni_bin_dir: /opt/cni/bin
 contiv_cni_download_dir: /tmp
 
 # URL for cni binaries
-contiv_cni_bin_url_base: "https://github.com/containernetworking/cni/releases/download/"
-contiv_cni_bin_url: "{{ contiv_cni_bin_url_base }}/{{ contiv_cni_version }}/cni-{{ contiv_cni_version }}.tbz2"
+contiv_cni_bin_url_base: "https://github.com/containernetworking/plugins/releases/download"
+contiv_cni_bin_url: "{{ contiv_cni_bin_url_base }}/v{{ contiv_cni_version }}/cni-plugins-amd64-v{{ contiv_cni_version }}.tgz"
+# contiv_cni_bin_url_base: "https://github.com/containernetworking/cni/releases/download/"
+# contiv_cni_bin_url: "{{ contiv_cni_bin_url_base }}/{{ contiv_cni_version }}/cni-amd64-v{{ contiv_cni_version }}.tgz"
 
 
 # Contiv config directory
@@ -68,6 +71,8 @@ contiv_config_dir: /opt/contiv/config
 # Directory to store downloaded Contiv releases
 contiv_releases_directory: /opt/contiv
 contiv_current_release_directory: "{{ contiv_releases_directory }}/{{ contiv_version }}"
+
+contiv_netctl_bin: "{{contiv_releases_directory}}/bin/netctl"
 
 #The default url to download the Contiv tar's from
 contiv_download_url_base: "https://github.com/contiv/netplugin/releases/download"

@@ -10,22 +10,22 @@
   run_once: true
 
 
-- name: Contiv etcd ns  | Create etcd-ns.yml from template
-  template:
-    src: contiv-infra-ns.yaml.j2
-    dest: "{{ mktemp.stdout }}/contiv-infra-ns.yml"
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true
+# - name: Contiv etcd ns  | Create etcd-ns.yml from template
+#   template:
+#     src: contiv-infra-ns.yaml.j2
+#     dest: "{{ mktemp.stdout }}/contiv-infra-ns.yml"
+#   delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+#   run_once: true
 
-- name: Contiv etcd ns | Add etcd namespace
-  oc_obj:
-    state: present
-    kind: namespace
-    name: contiv-infra
-    files:
-      - "{{ mktemp.stdout }}/contiv-infra-ns.yml"
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
-  run_once: true  
+# - name: Contiv etcd ns | Add etcd namespace
+#   oc_obj:
+#     state: present
+#     kind: namespace
+#     name: contiv-infra
+#     files:
+#       - "{{ mktemp.stdout }}/contiv-infra-ns.yml"
+#   delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+#   run_once: true  
   
 - name: Contiv etcd | Create contiv-etcd openshift user
   oc_serviceaccount:

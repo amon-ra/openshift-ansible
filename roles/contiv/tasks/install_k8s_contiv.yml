@@ -1,0 +1,97 @@
+---
+- include_tasks: ns.yml
+- include_tasks: certs.yml
+- include_tasks: api_proxy.yml
+
+
+- name: Contiv | Create temp directory for doing work
+  command: mktemp -d /tmp/openshift-contiv-XXXXXX
+  register: mktemp
+  changed_when: False
+  # For things that pass temp files between steps, we want to make sure they
+  # run on the same node.
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- name: Contiv | Create contiv openshift user
+  oc_serviceaccount:
+    state: present
+    name: contiv
+    namespace: contiv-infra
+  run_once: true
+
+- name: Contiv  | Create contiv-scc.yml from template
+  template:
+    src: contiv-scc.j2
+    dest: "{{ mktemp.stdout }}/contiv-scc.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- name: Contiv | Add contiv scc
+  oc_obj:
+    state: present
+    namespace: "contiv-infra"
+    kind: SecurityContextConstraints
+    name: contiv
+    files:
+      - "{{ mktemp.stdout }}/contiv-scc.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+
+- name: Contiv etcd | Create etcd-proxy.yml from template
+  template:
+    src: openshift-etcd-proxy-daemonset.yml.j2
+    dest: "{{ mktemp.stdout }}/etcd-proxy-daemonset.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- name: Contiv etcd | Add etcd-proxy daemonset
+  oc_obj:
+    state: present
+    namespace: "contiv-infra"
+    kind: daemonset
+    name: contiv-etcd-proxy
+    files:
+      - "{{ mktemp.stdout }}/etcd-proxy-daemonset.yml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true  
+
+
+- name: Contiv install | Create install-k8s-contiv.yaml from template
+  template:
+    src: install-k8s-contiv.yaml.j2
+    dest: "{{ mktemp.stdout }}/install-k8s-contiv.yaml"
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+# - name: Contiv install | Add contiv daemonset
+#   oc_obj:
+#     state: present
+#     namespace: "contiv-infra"
+#     kind: daemonset
+#     name: contiv-netplugin
+#     files:
+#       - "{{ mktemp.stdout }}/install-k8s-contiv.yaml"
+#   delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+#   run_once: true  
+
+- name: Contiv install
+  command: >
+    {{ openshift_client_binary }} apply
+    -f {{ mktemp.stdout }}/install-k8s-contiv.yaml
+    --config={{ openshift.common.config_base }}/master/admin.kubeconfig
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- name: Contiv install | Delete temp directory
+  file:
+    name: "{{ mktemp.stdout }}"
+    state: absent
+  changed_when: False
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  run_once: true
+
+- include_tasks: default_network.yml
+  when: contiv_default_network == true
+

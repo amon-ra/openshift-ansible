@@ -1,20 +1,30 @@
 ---
-- include_tasks: old_version_cleanup.yml
+# - include_tasks: old_version_cleanup.yml
 
-- name: Ensure contiv_bin_dir exists
-  file:
-    path: "{{ contiv_bin_dir }}"
-    recurse: yes
-    state: directory
+# - name: Ensure contiv_bin_dir exists
+#   file:
+#     path: "{{ contiv_bin_dir }}"
+#     recurse: yes
+#     state: directory
 
-- include_tasks: certs.yml
-  when: not use_contiv_etcd
+# - include_tasks: certs.yml
+#   when: not use_contiv_etcd
 
-- include_tasks: download_bins.yml
+# - include_tasks: download_bins.yml
 
-- include_tasks: netplugin.yml
+# - include_tasks: netplugin.yml
 
-- include_tasks: netmaster.yml
-  when: contiv_master
+# - include_tasks: netmaster.yml
+#   when: contiv_master
 
-- include_tasks: netplugin_start.yml
+# - include_tasks: netplugin_start.yml
+
+- include_tasks: k8s_netmaster.yml
+  when: contiv_master 
+
+- include_tasks: k8s_netplugin.yml
+
+- include_tasks: install_k8s_contiv.yml
+  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+
+

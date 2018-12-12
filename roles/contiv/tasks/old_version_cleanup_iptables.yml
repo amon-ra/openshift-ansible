@@ -42,3 +42,19 @@
     - "9999/tcp/contiv"
     - "10000/tcp/Contiv auth proxy service (10000)"
   notify: Save iptables rules
+
+- name: Netmaster IPtables | Delete k8s service forward rule
+  iptables:
+    state: absent
+    table: nat
+    chain: OUTPUT
+    protocol: "{{ item.split('/')[0] }}"
+    source: "{{ contiv_h1_ip }}"
+    destination: "{{ contiv_kube_master_api }}"
+    destination_port: "{{ item.split('/')[1] }}"
+    out_interface: "contivh1"
+    jump: "DNAT"
+    to_destination: "{{ item.split('/')[2] }}"
+    comment: contiv master kubeservice
+  loop: "{{ contiv_netmaster_kube_svc }}"
+  notify: Save iptables rules

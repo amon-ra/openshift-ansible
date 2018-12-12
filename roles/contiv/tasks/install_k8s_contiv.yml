@@ -32,7 +32,7 @@
     state: present
     namespace: "contiv-infra"
     kind: SecurityContextConstraints
-    name: contiv
+    name: contiv-daemon
     files:
       - "{{ mktemp.stdout }}/contiv-scc.yml"
   delegate_to: "{{ groups.oo_masters_to_config.0 }}"

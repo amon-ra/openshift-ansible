@@ -19,12 +19,15 @@
 
 # - include_tasks: netplugin_start.yml
 
+- include_tasks: old_version_cleanup.yml
+
 - include_tasks: k8s_netmaster.yml
   when: contiv_master 
 
 - include_tasks: k8s_netplugin.yml
 
 - include_tasks: install_k8s_contiv.yml
-  delegate_to: "{{ groups.oo_masters_to_config.0 }}"
+  delegate_to: ansible_hostname == "{{ groups.oo_masters_to_config.0 }}"
 
-
+- include_tasks: netmaster_iptables_kubesvc.yml
+  when: contiv_master and not contiv_has_firewalld and contiv_has_iptables

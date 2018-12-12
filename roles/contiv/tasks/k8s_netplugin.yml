@@ -80,11 +80,11 @@
     - "/etc/cni/net.d"
 # notify: restart kubelet
 
-- name: Netplugin | Make sure docker proxy setting exists
-  lineinfile:
-    dest: /etc/sysconfig/docker-network
-    regexp: '^https_proxy.*'
-    line: 'https_proxy={{ contiv_https_proxy }}'
-    state: present
-  register: docker_updated
+# - name: Netplugin | Make sure docker proxy setting exists
+#   lineinfile:
+#     dest: /etc/sysconfig/docker-network
+#     regexp: '^https_proxy.*'
+#     line: 'https_proxy="{{ contiv_https_proxy }}"'
+#     state: present
+#   register: docker_updated
 

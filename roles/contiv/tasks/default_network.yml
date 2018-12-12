@@ -1,10 +1,14 @@
 ---
 - name: Default network | Wait for netmaster
-  command: '{{ contiv_netctl_bin }} --netmaster "http://{{ inventory_hostname }}:{{ contiv_netmaster_port }}" tenant ls'
+  command: '{{ contiv_netctl_bin }} --netmaster "http://{{ inventory_hostname }}:{{ contiv_netmaster_port }}" tenant inspect default'
   register: tenant_result
-  until: tenant_result.stdout.find("default") != -1
+  until: tenant_result is succeeded
   retries: 9
   delay: 10
+
+- name: Default network | Global status 
+  command: '{{ contiv_netctl_bin }} --netmaster "http://{{ inventory_hostname }}:{{ contiv_netmaster_port }}" global info'
+  register: contiv_global_info_result
 
 - name: Default network | Check if default-net exists
   command: '{{ contiv_netctl_bin }} --netmaster "http://{{ inventory_hostname }}:{{ contiv_netmaster_port }}" net ls'
@@ -13,7 +17,11 @@
 
 - name: Default network | Set globals
   command: '{{ contiv_netctl_bin }} --netmaster "http://{{ inventory_hostname }}:{{ contiv_netmaster_port }}" global set --fabric-mode {{ contiv_fabric_mode }} --vlan-range {{ contiv_vlan_range }} --fwd-mode {{ contiv_netplugin_fwd_mode }} --private-subnet {{ contiv_private_ext_subnet }}'
-  when: net_result.stdout.find("default-net") == -1
+  when:
+  - net_result.stdout.find("default-net") == -1
+  - not("{{ contiv_fabric_mode }}" in contiv_global_info_result) or not("{{ contiv_vlan_range }}" in contiv_global_info_result) or
+    not("{{ contiv_netplugin_fwd_mode }}" in contiv_global_info_result) or
+    not("{{ contiv_private_ext_subnet }}" in contiv_global_info_result)
   run_once: true
 
 - name: Default network | Set arp mode to flood if ACI
@@ -28,7 +36,10 @@
 
 - name: Default network | Create host access infra network for VxLan routing case
   command: '{{ contiv_netctl_bin }} --netmaster "http://{{ inventory_hostname }}:{{ contiv_netmaster_port }}" net create --subnet={{ contiv_h1_subnet_default }} --gateway={{ contiv_h1_gw_default }} --nw-type="infra" contivh1'
-  when: (contiv_encap_mode == "vxlan") and (contiv_netplugin_fwd_mode == "routing") and net_result.stdout.find("contivh1") == -1
+  when: 
+  - (contiv_encap_mode == "vxlan") 
+  - (contiv_netplugin_fwd_mode == "routing") 
+  - net_result.stdout.find("contivh1") == -1
   run_once: true
 
 #- name: Default network | Create an allow-all policy for the default-group
@@ -48,7 +59,7 @@
 
 - name: Default network | Create aci default-group
   command: '{{ contiv_netctl_bin }} --netmaster "http://{{ inventory_hostname }}:{{ contiv_netmaster_port }}" group create default-net default-group'
-  when: contiv_fabric_mode == "aci"
+  when: net_result.stdout.find("default-net")
   run_once: true
 
 - name: Default network | Add external contracts to the default-group

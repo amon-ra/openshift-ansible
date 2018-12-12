@@ -3,5 +3,5 @@
   "K8S_CA": "{{ openshift.common.config_base }}/master/ca.crt",
   "K8S_KEY": "{{ openshift.common.config_base }}/master/master.server.key",
   "K8S_CERT": "{{ openshift.common.config_base }}/master/master.server.crt",
-  "SVC_SUBNET": "172.30.0.0/16"
+  "SVC_SUBNET": "{{ openshift.common.portal_net }}"
 }

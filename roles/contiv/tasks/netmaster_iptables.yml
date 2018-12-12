@@ -17,16 +17,3 @@
     - "{{ groups.oo_nodes_to_config|difference(hostvars[inventory_hostname]['ansible_' + contiv_netmaster_interface].ipv4.address)|list }}"
   notify: Save iptables rules
 
-- name: Netmaster IPtables | Add external rules
-  iptables:
-    action: insert
-    chain: INPUT
-    # Parsed from the contiv_netmaster_external list, this will be tcp or udp.
-    protocol: "{{ item.split('/')[1] }}"
-    match: "{{ item.split('/')[1] }}"
-    # Parsed from the contiv_netmaster_external list, this will be a port number.
-    destination_port: "{{ item.split('/')[0] }}"
-    jump: ACCEPT
-    comment: contiv
-  with_items: "{{ contiv_netmaster_external }}"
-  notify: Save iptables rules

@@ -1,7 +1,11 @@
 ## Contiv
 
 Install Contiv components (netmaster, netplugin, contiv_etcd) on Master and Minion nodes 
-
+```
+iptables -t nat -A OUTPUT -p tcp -o contivh1 --src 10.129.0.2 --dst 172.30.0.1 --dport 443 -j DNAT --to-destination 10.129.0.2:8443
+iptables -t nat -A OUTPUT -p tcp -o contivh1 --src 10.129.0.2 --dst 172.30.0.1 --dport 53 -j DNAT --to-destination 10.129.0.2:8053
+iptables -t nat -A OUTPUT -p udp -o contivh1 --src 10.129.0.2 --dst 172.30.0.1 --dport 53 -j DNAT --to-destination 10.129.0.2:8053
+```
 ## Requirements
 
 * Ansible 2.2
@@ -9,6 +13,7 @@ Install Contiv components (netmaster, netplugin, contiv_etcd) on Master and Mini
 
 ## Current Contiv restrictions when used with Openshift
 
+* Only works with default service network
 * Openshift Origin only 
 * VLAN encap mode only (default for Openshift Ansible)
 * Bare metal deployments only

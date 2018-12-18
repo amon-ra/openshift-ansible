@@ -9,7 +9,7 @@
 %global __requires_exclude ^/usr/bin/ansible-playbook$
 
 Name:           openshift-ansible
-Version:        3.11.56
+Version:        3.11.59
 Release:        1%{?dist}
 Summary:        Openshift and Atomic Enterprise Ansible
 License:        ASL 2.0
@@ -189,6 +189,26 @@ BuildArch:     noarch
 %{_datadir}/ansible/%{name}/test
 
 %changelog
+* Tue Dec 18 2018 AOS Automation Release Team <aos-team-art@redhat.com> 3.11.59-1
+- hostname is configured as local-ipv4 (bysnupy@hotmail.com)
+- Recovering missing features that disappear with PR 10805
+  (jparrill@redhat.com)
+
+* Mon Dec 17 2018 AOS Automation Release Team <aos-team-art@redhat.com> 3.11.58-1
+- bug 1655675. Extend DC recreate param to avoid premature rolebacks
+  (jcantril@redhat.com)
+- Maintain /var/lib/containers/storage mount during upgrades
+  (jstuever@redhat.com)
+- Fix openstack nsupdate record (tzumainn@redhat.com)
+- Fix output of insecure registries in /etc/containers/registries.conf
+  (umohnani@redhat.com)
+- logging support ansible 2.7 -no include_tasks parameter (rmeggins@redhat.com)
+
+* Thu Dec 13 2018 AOS Automation Release Team <aos-team-art@redhat.com> 3.11.57-1
+- Add openshift_node_group_name to hosts.example (rteague@redhat.com)
+- Set maxSurge in kuryr-controller Deployment (mdulko@redhat.com)
+- Update Fuse templates with 7.2 release (antonin@stefanutti.fr)
+
 * Wed Dec 12 2018 AOS Automation Release Team <aos-team-art@redhat.com> 3.11.56-1
 - 
 

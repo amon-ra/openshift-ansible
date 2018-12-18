@@ -1,6 +1,6 @@
 
-
-
+replace metric-server-role
+https://github.com/DirectXMan12/k8s-prometheus-adapter
 
 
 
@@ -8,13 +8,27 @@
 
 NetworkManager.conf:
 ```
+yum install -y NetworkManager
+systemctl enable NetworkManager
+```
+```
 [keyfile]
 unmanaged-devices=veth*
 ```
 
 Local volume storage is broken, fix:
-
 ```
+chcon -R unconfined_u:object_r:svirt_sandbox_file_t:s0 /mnt/local-storage/
+```
+```
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+ name: local-hdd
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -25,8 +39,8 @@ data:
     local-hdd:
        hostDir: /mnt/local-storage/hdd
        mountDir:  /mnt/local-storage/hdd
-
-piVersion: extensions/v1beta1
+---
+apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   creationTimestamp: 2018-12-15T20:14:15Z

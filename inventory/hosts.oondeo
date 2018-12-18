@@ -8,7 +8,8 @@ etcd
 
 
 [OSEv3:vars]
-ansible_user=root
+ansible_user=centos
+ansible_become=yes
 
 #openshift_enable_excluders=False
 openshift_use_crio=False
@@ -19,7 +20,8 @@ openshift_deployment_type=origin
 #openshift_portal_net=172.30.0.0/16
 #osm_cluster_network_cidr=10.128.0.0/14
 #osm_host_subnet_length=9
-#openshift_node_groups=[{'name': 'node-config-all-in-one', 'labels': ['node-role.kubernetes.io/master=true', 'node-role.kubernetes.io/infra=true', 'node-role.kubernetes.io/compute=true']}]
+openshift_node_groups=[{'name': 'node-config-master', 'labels': ['node-role.kubernetes.io/master=true']},{'name': 'node-config-compute-infra', 'labels': ['node-role.kubernetes.io/infra=true', 'node-role.kubernetes.io/compute=true']}]
+osn_storage_plugin_deps=[]
 
 #yum install centos-release-openshift-origin311
 # OpenShift repository configuration
@@ -41,7 +43,7 @@ openshift_master_default_subdomain=sol.oondeo.es
 openshift_master_cluster_public_hostname=console.sol.oondeo.es
 
 openshift_disable_check=disk_availability,docker_storage,memory_availability,docker_image_availability
-openshift_node_kubelet_args={'pods-per-core': ['10']}
+openshift_node_kubelet_args={'pods-per-core': ['40']}
 
 
 # Debug level for all OpenShift components (Defaults to 2)
@@ -244,20 +246,20 @@ openshift_hosted_router_certificate={"certfile": "{{ inventory_dir }}/oondeo~/ss
 # Registry selector (optional)
 # Registry will only be created if nodes matching this label are present.
 # Default value: 'node-role.kubernetes.io/infra=true'
-#openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
+openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
 #
 # Registry replicas (optional)
 # Unless specified, openshift-ansible will calculate the replica count
 # based on the number of nodes matching the openshift registry selector.
-#openshift_hosted_registry_replicas=2
+openshift_hosted_registry_replicas=1
 #
 # Validity of the auto-generated certificate in days (optional)
 #openshift_hosted_registry_cert_expire_days=730
 #
 # Manage the OpenShift Registry (optional)
-#openshift_hosted_manage_registry=true
+openshift_hosted_manage_registry=true
 # Manage the OpenShift Registry Console (optional)
-#openshift_hosted_manage_registry_console=true
+openshift_hosted_manage_registry_console=false
 #
 # hostPath (local filesystem storage)
 # Suitable for "all-in-one" or proof of concept deployments
@@ -277,7 +279,9 @@ openshift_metrics_install_metrics=false
 # By default, metrics-server is not automatically deployed, unless metrics is also
 # deployed.  Deploying metrics-server is necessary to use the HorizontalPodAutoscaler.
 # Set this to enable it.
-openshift_metrics_server_install=false
+#https://github.com/DirectXMan12/k8s-prometheus-adapter
+openshift_metrics_server_install=true
+
 #
 # Storage Options
 # If openshift_metrics_storage_kind is unset then metrics will be stored
@@ -299,7 +303,7 @@ openshift_persistentlocalstorage_provisionner_image=quay.io/external_storage/loc
 # Cluster monitoring
 #
 # Cluster monitoring is enabled by default, disable it by setting
-openshift_cluster_monitoring_operator_install=false
+openshift_cluster_monitoring_operator_install=true
 #
 # Cluster monitoring configuration variables allow setting the amount of
 # storage requested through PersistentVolumeClaims.
@@ -320,7 +324,7 @@ openshift_cluster_monitoring_operator_install=false
 # Logging deployment
 #
 # Currently logging deployment is disabled by default, enable it by setting this
-openshift_logging_install_logging=false
+openshift_logging_install_logging=true
 openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra":"true"}
 #openshift_logging_storage_kind=emptydir
 
@@ -492,12 +496,16 @@ openshift_enable_unsupported_configurations=true
 
 
 [masters]
-sylar.cluster.oondeo.es 
+claire.cluster.oondeo.es 
 
 [etcd]
-sylar.cluster.oondeo.es 
+claire.cluster.oondeo.es 
 
 [nodes]
-sylar.cluster.oondeo.es  openshift_hostname=sylar openshift_public_hostname=sylar.cluster.oondeo.es openshift_ip=172.18.0.2 openshift_node_group_name="node-config-all-in-one"  openshift_schedulable=true
-
+#sylar.oondeo.es
+#sylar.cluster.oondeo.es  openshift_hostname=sylar openshift_public_hostname=sylar.cluster.oondeo.es openshift_ip=172.18.0.46 openshift_node_group_name="node-config-all-in-one"  openshift_schedulable=true
+#claire.cluster.oondeo.es openshift_ip=192.168.42.246  openshift_public_hostname=claire.cluster.oondeo.es openshift_hostname=claire.cluster.oondeo.es openshift_node_group_name='node-config-master'
+#sylar.cluster.oondeo.es openshift_ip=192.168.42.148  openshift_public_hostname=sylar.cluster.oondeo.es openshift_hostname=sylar.cluster.oondeo.es openshift_node_group_name='node-config-compute-infra'
+claire.cluster.oondeo.es openshift_ip=172.18.0.45  openshift_public_hostname=claire.cluster.oondeo.es openshift_hostname=claire.cluster.oondeo.es openshift_node_group_name='node-config-master' 
+sylar.cluster.oondeo.es openshift_ip=172.18.0.51  openshift_public_hostname=sylar.cluster.oondeo.es openshift_hostname=sylar.cluster.oondeo.es openshift_node_group_name='node-config-compute-infra'
 

@@ -40,6 +40,7 @@ Additional parameters that can be defined in the inventory are:
 |---------|----------------------|---------|---------|
 | CALICO_IPV4POOL_IPIP | IPIP Mode to use for the IPv4 POOL created at start up.	| off, always, cross-subnet	| always |
 | CALICO_LOG_DIR | Directory on the host machine where Calico Logs are written.| String	| /var/log/calico |
+| CALICO_IP_AUTODETECTION_METHOD | https://docs.projectcalico.org/v3.3/reference/node/configuration#ip-autodetection-methods | String | first-found |
 
 ### Contact Information
 

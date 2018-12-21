@@ -302,6 +302,8 @@ spec:
             # Set Felix endpoint to host default action to ACCEPT.
             - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
               value: "ACCEPT"
+            - name: IP_AUTODETECTION_METHOD
+              value: "{{ calico_ip_autodetection_method }}"
             # The default IPv4 pool to create on startup if none exists. Pod IPs will be
             # chosen from this range. Changing this value after installation will have
             # no effect. This should fall within '--cluster-cidr'.
